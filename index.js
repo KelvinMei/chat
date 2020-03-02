@@ -9,7 +9,15 @@ app.get('/', function(req, res){
 
 io.on('connection', function(socket){
   socket.on('chat message', function(msg){
-    io.emit('chat message', msg);
+    const date = new Date();
+    var hr = date.getHours();
+    var min = date.getMinutes();
+    if (min < 10) {
+        min = "0" + min;
+    }
+    var time = hr + ":" + min;
+
+    io.emit('chat message', time + " " + msg);
   });
 });
 
