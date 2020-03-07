@@ -31,18 +31,24 @@
         padding: 10px;
       }
       #messages {
-        list-style-type: none;
         margin: 0;
         padding: 0;
+        display: flex;            
+        flex-direction: column;    
+        justify-content: flex-start;  
+        overflow-y: scroll;
+        height: 400px;
       }
       #messages li {
         padding: 5px 10px;
       }
+
+      #messages li:first-child {
+        margin-top: auto;   
+      }
+
       #messages li:nth-child(odd) {
         background: #eee;
-      }
-      #messages {
-        margin-bottom: 40px;
       }
 
       #users {
@@ -102,7 +108,7 @@
 
         socket.on("new message", function(msg) {
           $("#messages").append($("<li>").text(msg));
-          window.scrollTo(0, document.body.scrollHeight);
+          $("#messages").scrollTop($("#messages")[0].scrollHeight);
         });
 
         socket.on("get message", function(data) {
@@ -110,7 +116,7 @@
           for (i = 0; i < data.length; i++) {
             $("#messages").append($("<li>").text(data[i]));
           }
-          window.scrollTo(0, document.body.scrollHeight);
+          $("#messages").scrollTop($("#messages")[0].scrollHeight);
         });
 
         socket.on("get users", function(data) {

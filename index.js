@@ -74,7 +74,7 @@ io.on("connection", function(socket) {
   }
 
   function updateUsername(name) {
-    io.emit("username", name);
+    io.sockets.connected[socket.id].emit("username", name);
   }
 
   //new user
