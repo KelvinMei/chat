@@ -13,6 +13,7 @@ app.get("/", function(req, res) {
 
 io.on("connection", function(socket) {
   connections.push(socket.id);
+  console.log("number of connections: " + connections.length);
 
   //disconnect
   socket.on("disconnect", function(data) {
@@ -22,6 +23,18 @@ io.on("connection", function(socket) {
 
     //connection
     connections.splice(connections.indexOf(socket.id), 1);
+    console.log("number of connections: " + connections.length);
+
+    var object = {
+      name: socket.username,
+      message: " has left the chat.",
+      time: "",
+      color: socket.color,
+      strong: false
+    };
+
+    listOfMessages.push(object);
+    io.emit("new message", object);
   });
 
   //send message
@@ -32,28 +45,53 @@ io.on("connection", function(socket) {
     ) {
       users.splice(users.indexOf(socket.username), 1);
 
+      var object = {
+        name: socket.username,
+        message: " has changed their name to " + msg.substring(6, msg.length),
+        time: "",
+        color: socket.color,
+        strong: false
+      };
       socket.username = msg.substring(6, msg.length);
       users.push(socket.username);
       updateUsername(socket.username);
       updateUsernames();
-    } /* else if (msg.startsWith("/nickcolor ")) {
+      listOfMessages.push(object);
+      io.emit("new message", object);
+    } else if (msg.startsWith("/nickcolor ")) {
+      socket.color = msg.substring(11, msg.length);
 
-      socket.username = socket.username.fontcolor(
-        msg.substring(11, msg.length)
-      );
-    }*/ else {
+      var object = {
+        name: socket.username,
+        message: " has changed their color to " + socket.color,
+        time: "",
+        color: socket.color,
+        strong: false
+      };
+      listOfMessages.push(object);
+      io.emit("new message", object);
+    } else {
       const date = new Date();
       var hr = date.getHours();
       var min = date.getMinutes();
       if (min < 10) {
         min = "0" + min;
       }
-      var time = hr + ":" + min;
+      var time = hr + ":" + min + " ";
 
-      msg = time + " " + socket.username + ": " + msg;
+      var object = {
+        name: socket.username,
+        message: ": " + msg,
+        time: time,
+        color: socket.color,
+        strong: false
+      };
 
-      listOfMessages.push(msg);
-      io.emit("new message", msg);
+      listOfMessages.push(object);
+      socket.broadcast.emit("new message", object);
+
+      object.strong = true;
+      io.sockets.connected[socket.id].emit("new message", object);
     }
   });
 
@@ -63,9 +101,22 @@ io.on("connection", function(socket) {
       socket.username = "User" + Math.floor(Math.random() * 10);
     } while (users.includes(socket.username));
 
+    socket.color = "000000";
+
     users.push(socket.username);
     updateUsername(socket.username);
     updateUsernames();
+
+    var object = {
+      name: socket.username,
+      message: " has joined the chat.",
+      time: "",
+      color: socket.color,
+      strong: false
+    };
+
+    listOfMessages.push(object);
+    io.emit("new message", object);
   });
 
   //update username list
@@ -79,7 +130,7 @@ io.on("connection", function(socket) {
 
   //new user
   socket.on("get message", function() {
-    io.emit("get message", listOfMessages);
+    io.sockets.connected[socket.id].emit("get message", listOfMessages);
   });
 });
 

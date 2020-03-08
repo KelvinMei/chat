@@ -33,18 +33,19 @@
       #messages {
         margin: 0;
         padding: 0;
-        display: flex;            
-        flex-direction: column;    
-        justify-content: flex-start;  
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
         overflow-y: scroll;
-        height: 400px;
+        height: 89vh;
       }
+
       #messages li {
         padding: 5px 10px;
       }
 
       #messages li:first-child {
-        margin-top: auto;   
+        margin-top: auto;
       }
 
       #messages li:nth-child(odd) {
@@ -52,13 +53,18 @@
       }
 
       #users {
-        list-style-type: none;
         margin: 0;
         padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        overflow-y: scroll;
+        height: 89vh;
       }
-      #users li {
+      #users {
         padding: 5px 10px;
       }
+
       #users li:nth-child(odd) {
         background: #eee;
       }
@@ -97,8 +103,8 @@
       $(function() {
         var socket = io();
 
-        socket.emit("new users");
         socket.emit("get message");
+        socket.emit("new users");
 
         $("form").submit(function() {
           socket.emit("send message", $("#m").val());
@@ -106,16 +112,31 @@
           return false;
         });
 
-        socket.on("new message", function(msg) {
-          $("#messages").append($("<li>").text(msg));
+        socket.on("new message", function(object) {
+          msg =
+            object.time + object.name.fontcolor(object.color) + object.message;
+
+          if (object.strong == false) {
+            $("#messages").append($("<li>").html(msg));
+          } else {
+            $("#messages").append($("<li>").append($("<strong>").html(msg)));
+          }
+
           $("#messages").scrollTop($("#messages")[0].scrollHeight);
         });
 
-        socket.on("get message", function(data) {
+        socket.on("get message", function(object) {
           $("#messages").empty();
-          for (i = 0; i < data.length; i++) {
-            $("#messages").append($("<li>").text(data[i]));
+
+          for (i = 0; i < object.length; i++) {
+            msg =
+              object[i].time +
+              object[i].name.fontcolor(object[i].color) +
+              object[i].message;
+
+            $("#messages").append($("<li>").html(msg));
           }
+
           $("#messages").scrollTop($("#messages")[0].scrollHeight);
         });
 
