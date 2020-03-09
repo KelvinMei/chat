@@ -95,6 +95,9 @@
       .container-fluid {
         background-color: #5ab9ea;
       }
+      #row {
+        height: 100%;
+      }
     </style>
     <link
       rel="stylesheet"
@@ -111,16 +114,17 @@
           <ul id="messages"></ul>
         </div>
         <div class="col-sm-4">
-          <h3 id="onlineUsers">Online users:</h3>
+          <h3 id="onlineUsers">Online Users</h3>
           <ul id="users"></ul>
         </div>
       </div>
-
-      <form action="">
-        <input id="m" autocomplete="off" /><button class="btn-primary">
-          Send
-        </button>
-      </form>
+      <div class="row">
+        <form action="">
+          <input id="m" autocomplete="off" /><button class="btn-primary">
+            Send
+          </button>
+        </form>
+      </div>
     </div>
 
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
@@ -138,7 +142,7 @@
             /(?:(?:^|.*;\s*)name\s*\=\s*([^;]*).*$)|^.*$/,
             "$1"
           );
-          console.log("name of cookie:" + cookieValue);
+
           socket.emit("existing users", cookieValue);
         } else {
           socket.emit("new users");
@@ -200,7 +204,6 @@
         socket.on("username", function(name) {
           $("#username").text("You are " + name + ".");
           document.cookie = "name=" + name;
-          console.log(document.cookie);
         });
 
         socket.on("name taken", function(data) {
