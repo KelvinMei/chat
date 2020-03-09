@@ -67,21 +67,25 @@ io.on("connection", function(socket) {
 
       //change of color
     } else if (msg.startsWith("/nickcolor ")) {
-      socket.color = msg.substring(11, msg.length);
+      if (/^[A-Fa-f0-9]{6}$/i.test(msg.substring(11, msg.length))) {
+        socket.color = msg.substring(11, msg.length);
 
-      var object = {
-        name: socket.username,
-        message: " has changed their color to " + socket.color,
-        time: "",
-        color: socket.color,
-        strong: false
-      };
+        var object = {
+          name: socket.username,
+          message: " has changed their color to " + socket.color,
+          time: "",
+          color: socket.color,
+          strong: false
+        };
 
-      listOfMessages.push(object);
-      socket.broadcast.emit("new message", object);
+        listOfMessages.push(object);
+        socket.broadcast.emit("new message", object);
 
-      object.strong = true;
-      io.sockets.connected[socket.id].emit("new message", object);
+        object.strong = true;
+        io.sockets.connected[socket.id].emit("new message", object);
+      } else {
+        invalidcolor(msg.substring(11, msg.length));
+      }
     } else if (msg.startsWith("/")) {
       invalidcommand(msg);
     } else {
@@ -147,6 +151,10 @@ io.on("connection", function(socket) {
 
   function invalidcommand(msg) {
     io.sockets.connected[socket.id].emit("invalid command", msg);
+  }
+
+  function invalidcolor(color) {
+    io.sockets.connected[socket.id].emit("invalid color", color);
   }
 
   function updateUsername(name) {

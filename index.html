@@ -186,6 +186,11 @@
           msg = msg + " is a non-existant slash command.";
           $("#messages").append($("<li>").append($("<strong>").html(msg)));
         });
+
+        socket.on("invalid color", function(color) {
+          msg = color + " is not a color represented in hex color(RRGGBB)";
+          $("#messages").append($("<li>").append($("<strong>").html(msg)));
+        });
       });
     </script>
   </body>
