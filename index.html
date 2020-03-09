@@ -103,8 +103,22 @@
       $(function() {
         var socket = io();
 
+        if (
+          document.cookie
+            .split(";")
+            .filter(item => item.trim().startsWith("name=")).length
+        ) {
+          var cookieValue = document.cookie.replace(
+            /(?:(?:^|.*;\s*)name\s*\=\s*([^;]*).*$)|^.*$/,
+            "$1"
+          );
+          console.log("name of cookie:" + cookieValue);
+          socket.emit("existing users", cookieValue);
+        } else {
+          socket.emit("new users");
+        }
+
         socket.emit("get message");
-        socket.emit("new users");
 
         $("form").submit(function() {
           socket.emit("send message", $("#m").val());
@@ -134,7 +148,16 @@
               object[i].name.fontcolor(object[i].color) +
               object[i].message;
 
-            $("#messages").append($("<li>").html(msg));
+            if (
+              document.cookie.replace(
+                /(?:(?:^|.*;\s*)name\s*\=\s*([^;]*).*$)|^.*$/,
+                "$1"
+              ) == object[i].name
+            ) {
+              $("#messages").append($("<li>").append($("<strong>").html(msg)));
+            } else {
+              $("#messages").append($("<li>").html(msg));
+            }
           }
 
           $("#messages").scrollTop($("#messages")[0].scrollHeight);
@@ -150,6 +173,18 @@
 
         socket.on("username", function(name) {
           $("#username").text("You are " + name + ".");
+          document.cookie = "name=" + name;
+          console.log(document.cookie);
+        });
+
+        socket.on("name taken", function(data) {
+          msg = "The name " + data.old + " is taken. Your name is " + data.new;
+          $("#messages").append($("<li>").append($("<strong>").html(msg)));
+        });
+
+        socket.on("invalid command", function(msg) {
+          msg = msg + " is a non-existant slash command.";
+          $("#messages").append($("<li>").append($("<strong>").html(msg)));
         });
       });
     </script>

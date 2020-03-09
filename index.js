@@ -13,16 +13,16 @@ app.get("/", function(req, res) {
 
 io.on("connection", function(socket) {
   connections.push(socket.id);
+  //connections
   console.log("number of connections: " + connections.length);
 
   //disconnect
   socket.on("disconnect", function(data) {
-    //user
     users.splice(users.indexOf(socket.username), 1);
     updateUsernames();
 
-    //connection
     connections.splice(connections.indexOf(socket.id), 1);
+
     console.log("number of connections: " + connections.length);
 
     var object = {
@@ -39,25 +39,33 @@ io.on("connection", function(socket) {
 
   //send message
   socket.on("send message", function(msg) {
-    if (
-      msg.startsWith("/nick ") &&
-      !users.includes(msg.substring(6, msg.length))
-    ) {
-      users.splice(users.indexOf(socket.username), 1);
+    if (msg.startsWith("/nick ")) {
+      if (users.includes(msg.substring(6, msg.length))) {
+        //cannot change names
+        usernameTaken(msg.substring(6, msg.length), socket.username);
+      } else {
+        //change of name
+        users.splice(users.indexOf(socket.username), 1);
+        var object = {
+          name: socket.username,
+          message: " has changed their name to " + msg.substring(6, msg.length),
+          time: "",
+          color: socket.color,
+          strong: false
+        };
+        socket.username = msg.substring(6, msg.length);
+        users.push(socket.username);
+        updateUsername(socket.username);
+        updateUsernames();
 
-      var object = {
-        name: socket.username,
-        message: " has changed their name to " + msg.substring(6, msg.length),
-        time: "",
-        color: socket.color,
-        strong: false
-      };
-      socket.username = msg.substring(6, msg.length);
-      users.push(socket.username);
-      updateUsername(socket.username);
-      updateUsernames();
-      listOfMessages.push(object);
-      io.emit("new message", object);
+        listOfMessages.push(object);
+        socket.broadcast.emit("new message", object);
+
+        object.strong = true;
+        io.sockets.connected[socket.id].emit("new message", object);
+      }
+
+      //change of color
     } else if (msg.startsWith("/nickcolor ")) {
       socket.color = msg.substring(11, msg.length);
 
@@ -68,8 +76,14 @@ io.on("connection", function(socket) {
         color: socket.color,
         strong: false
       };
+
       listOfMessages.push(object);
-      io.emit("new message", object);
+      socket.broadcast.emit("new message", object);
+
+      object.strong = true;
+      io.sockets.connected[socket.id].emit("new message", object);
+    } else if (msg.startsWith("/")) {
+      invalidcommand(msg);
     } else {
       const date = new Date();
       var hr = date.getHours();
@@ -124,13 +138,57 @@ io.on("connection", function(socket) {
     io.emit("get users", users);
   }
 
+  function usernameTaken(oldname, newname) {
+    io.sockets.connected[socket.id].emit("name taken", {
+      old: oldname,
+      new: newname
+    });
+  }
+
+  function invalidcommand(msg) {
+    io.sockets.connected[socket.id].emit("invalid command", msg);
+  }
+
   function updateUsername(name) {
     io.sockets.connected[socket.id].emit("username", name);
   }
 
-  //new user
   socket.on("get message", function() {
     io.sockets.connected[socket.id].emit("get message", listOfMessages);
+  });
+
+  socket.on("existing users", function(name) {
+    socket.username = name;
+    socket.color = "000000";
+
+    while (users.includes(socket.username)) {
+      //username taken
+      oldname = socket.username;
+      socket.username = "User" + Math.floor(Math.random() * 10);
+      usernameTaken(oldname, socket.username);
+    }
+
+    for (i = listOfMessages.length; i > 0; i--) {
+      if (listOfMessages[i - 1].name == socket.username) {
+        socket.color = listOfMessages[i - 1].color;
+        break;
+      }
+    }
+
+    users.push(socket.username);
+    updateUsername(socket.username);
+    updateUsernames();
+
+    var object = {
+      name: socket.username,
+      message: " has joined the chat.",
+      time: "",
+      color: socket.color,
+      strong: false
+    };
+
+    listOfMessages.push(object);
+    io.emit("new message", object);
   });
 });
 
