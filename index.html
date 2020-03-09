@@ -70,9 +70,6 @@
       #users {
         padding: 5px 10px;
       }
-      #users li:first-child {
-        margin-top: auto;
-      }
 
       #users li:nth-child(odd) {
         background: #eee;
@@ -206,19 +203,23 @@
           document.cookie = "name=" + name;
         });
 
+        //error check sockets
         socket.on("name taken", function(data) {
           msg = "The name " + data.old + " is taken. Your name is " + data.new;
           $("#messages").append($("<li>").append($("<strong>").html(msg)));
+          window.scrollTo(0, document.body.scrollHeight);
         });
 
         socket.on("invalid command", function(msg) {
           msg = msg + " is a non-existant slash command.";
           $("#messages").append($("<li>").append($("<strong>").html(msg)));
+          window.scrollTo(0, document.body.scrollHeight);
         });
 
         socket.on("invalid color", function(color) {
           msg = color + " is not a color represented in hex color(RRGGBB)";
           $("#messages").append($("<li>").append($("<strong>").html(msg)));
+          window.scrollTo(0, document.body.scrollHeight);
         });
       });
     </script>

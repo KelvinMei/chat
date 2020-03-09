@@ -149,18 +149,6 @@ io.on("connection", function(socket) {
     });
   }
 
-  function invalidcommand(msg) {
-    io.sockets.connected[socket.id].emit("invalid command", msg);
-  }
-
-  function invalidcolor(color) {
-    io.sockets.connected[socket.id].emit("invalid color", color);
-  }
-
-  function updateUsername(name) {
-    io.sockets.connected[socket.id].emit("username", name);
-  }
-
   socket.on("get message", function() {
     io.sockets.connected[socket.id].emit("get message", listOfMessages);
   });
@@ -198,6 +186,19 @@ io.on("connection", function(socket) {
     listOfMessages.push(object);
     io.emit("new message", object);
   });
+
+  //error check functions
+  function invalidcommand(msg) {
+    io.sockets.connected[socket.id].emit("invalid command", msg);
+  }
+
+  function invalidcolor(color) {
+    io.sockets.connected[socket.id].emit("invalid color", color);
+  }
+
+  function updateUsername(name) {
+    io.sockets.connected[socket.id].emit("username", name);
+  }
 });
 
 http.listen(port, function() {
